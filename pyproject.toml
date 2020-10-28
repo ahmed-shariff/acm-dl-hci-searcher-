@@ -47,7 +47,7 @@ tox = "*"
 yapf = "*"
 
 [tool.poetry.scripts]
-acm-dl-searcher = 'acm_dl_searcher.cli:main'
+acm-dl-searcher = 'acm_dl_searcher.cli:cli'
 
 [build-system]
 requires = ["poetry>=0.12"]
