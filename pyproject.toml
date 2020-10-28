@@ -29,6 +29,9 @@ python = "^3.6"
 click = "^7.1.2"
 minilog = "^1.5"
 requests = "^2.24.0"
+beautifulsoup4 = "^4.9.3"
+bibtexparser = "^1.2.0"
+tqdm = "^4.51.0"
 
 
 [tool.poetry.dev-dependencies]
