@@ -8,7 +8,7 @@ import json
 from tqdm import tqdm
 
 DATA_DIRECTORY = Path.home() / ".acm_dl_data"
-SEARCH_STRING = "https://dl.acm.org/action/doSearch?LimitedContentGroupKey={key}&pageSize=20&startPage=0"
+SEARCH_STRING = "https://dl.acm.org/action/doSearch?LimitedContentGroupKey={key}&pageSize=50&startPage={page_id}"
 
 
 def process_venue_data_from_doi(doi, overwrite=False):
@@ -23,7 +23,7 @@ def process_venue_data_from_doi(doi, overwrite=False):
         return doi_list_details
 
     doi = doi.replace("/", "%2F")
-    search_string = SEARCH_STRING.format(key=doi)
+    search_string = SEARCH_STRING.format(key=doi, page_id=0)
     response = requests.get(search_string)
     with open("temp.html", "w") as f:
         f.write(response.text)
@@ -31,6 +31,17 @@ def process_venue_data_from_doi(doi, overwrite=False):
     doi_matcher = re.compile(r">https:\/\/doi\.org\/\d{2}\.\d{4}\/\d+\.\d+<")
     # A working curl for doi meta data: curl --location --silent --header "Accept: application/x-bibtex" https://doi.org/10.1145/3313831.3376868
     doi_list = [i.rstrip("<").lstrip(">") for i in doi_matcher.findall(response.text)]
+    total_hits = int(BeautifulSoup(response.text, features="html.parser").find("span", {"class": "hitsLength"}).get_text())
+    print(f"Found {total_hits} hits")
+    if total_hits > 50:
+        page_id = 1
+        while page_id * 50 < total_hits:
+            print(f"Getting page {page_id}", end="\r")
+            search_string = SEARCH_STRING.format(key=doi, page_id=page_id)
+            response = requests.get(search_string)
+            doi_list.extend([i.rstrip("<").lstrip(">") for i in doi_matcher.findall(response.text)])
+            page_id += 1
+        print()
 
     doi_list_details = []
     for doi_url in tqdm(doi_list):
