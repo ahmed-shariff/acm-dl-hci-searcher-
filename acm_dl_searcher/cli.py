@@ -2,7 +2,7 @@
 import sys
 
 import click
-from acm_dl_hci_searcher.__main__ import process_doi
+from acm_dl_searcher.__main__ import process_doi
 
 @click.command()
 def main():
