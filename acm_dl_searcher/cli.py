@@ -2,8 +2,10 @@
 import sys
 
 import click
+from tabulate import tabulate
 from acm_dl_searcher.__main__ import (_process_venue_data_from_doi,
-                                      _get_collection_info)
+                                      _get_collection_info,
+                                      _get_entry_count)
 
 @click.group()
 def cli():
@@ -19,9 +21,17 @@ def get():
 
 
 @cli.command()
-def list():
+@click.option("--full-path", type=bool, default=False, is_flag=True)
+def list(full_path):
     """List all the details"""
-    print(*(_get_collection_info()), sep="\n")
+    info, info_file = _get_collection_info()
+    if full_path:
+        print("The file location is: {} \n".format(info_file.parent))
+        
+    table = [[i["short_name"], i["title"], i["doi"], _get_entry_count(info_file.parent / name), info_file.parent / name if full_path else name] for name, i in info.items()]
+    headers = ["Short Name", "Title", "DOI", "# of entries" ,"File"]
+    print(tabulate(table, headers, tablefmt="fancy_grid"))
+
 
 if __name__ == "__main__":
     sys.exit(main())  # pragma: no cover

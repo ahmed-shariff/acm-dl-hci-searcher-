@@ -520,6 +520,17 @@ lint = ["flake8", "mypy", "docutils-stubs"]
 test = ["pytest"]
 
 [[package]]
+name = "tabulate"
+version = "0.8.7"
+description = "Pretty-print tabular data"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+widechars = ["wcwidth"]
+
+[[package]]
 name = "toml"
 version = "0.10.1"
 description = "Python Library for Tom's Obvious, Minimal Language"
@@ -633,7 +644,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "6da56cccf61e13ad7ebace5b9db135514f9ad50bd79a96e2c4cb696293d0bf09"
+content-hash = "bd4c08ea1e5c5300b7bbeb36f87d27a257929aa4b46d41bad2164cbe9e72890a"
 
 [metadata.files]
 alabaster = [
@@ -913,6 +924,10 @@ sphinxcontrib-qthelp = [
 sphinxcontrib-serializinghtml = [
     {file = "sphinxcontrib-serializinghtml-1.1.4.tar.gz", hash = "sha256:eaa0eccc86e982a9b939b2b82d12cc5d013385ba5eadcc7e4fed23f4405f77bc"},
     {file = "sphinxcontrib_serializinghtml-1.1.4-py2.py3-none-any.whl", hash = "sha256:f242a81d423f59617a8e5cf16f5d4d74e28ee9a66f9e5b637a18082991db5a9a"},
+]
+tabulate = [
+    {file = "tabulate-0.8.7-py3-none-any.whl", hash = "sha256:ac64cb76d53b1231d364babcd72abbb16855adac7de6665122f97b593f1eb2ba"},
+    {file = "tabulate-0.8.7.tar.gz", hash = "sha256:db2723a20d04bcda8522165c73eea7c300eda74e0ce852d9022e0159d7895007"},
 ]
 toml = [
     {file = "toml-0.10.1-py2.py3-none-any.whl", hash = "sha256:bda89d5935c2eac546d648028b9901107a595863cb36bae0c73ac804a9b4ce88"},

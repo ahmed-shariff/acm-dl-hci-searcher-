@@ -88,3 +88,11 @@ def _update_collection_info(file_name, doi, title, short_name):
     with open(info_file, "w") as f:
         json.dump(info, f)
 
+
+def _get_entry_count(doi_file):
+    try:
+        with open(doi_file) as f:
+            content = json.load(f)
+        return len(content)
+    except:
+        return None
