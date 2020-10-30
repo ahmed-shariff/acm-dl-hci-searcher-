@@ -65,12 +65,16 @@ def _process_venue_data_from_doi(doi, short_name=None, overwrite=False):
 
 
 def _ensure_data_directory_exists():
+    """Makes sure the data directory exists and returns the data directory path"""
     if not DATA_DIRECTORY.exists():
         DATA_DIRECTORY.mkdir()
     return DATA_DIRECTORY
     
 
 def _get_collection_info():
+    """
+    Reads the global information file and return the contents as adictionary and the path to the file itself.
+    """
     info_file = _ensure_data_directory_exists() / "info.json"
     if info_file.exists():
         with open(info_file) as f:
@@ -81,6 +85,9 @@ def _get_collection_info():
         
 
 def _update_collection_info(file_name, doi, title, short_name):
+    """
+    Adds an entry to the gloabl infomation file. If the entry exists, will be overwritten.
+    """
     info, info_file = _get_collection_info()
 
     info[file_name] = {"doi": doi, "title": title, "short_name": short_name}
@@ -90,9 +97,41 @@ def _update_collection_info(file_name, doi, title, short_name):
 
 
 def _get_entry_count(doi_file):
+    """
+    Given a file path, will return the number of entries in that file. If the file reading files, returns None.
+    """
     try:
         with open(doi_file) as f:
             content = json.load(f)
         return len(content)
     except:
         return None
+
+
+def _search(search_fn, venue_filter=None):
+    """
+    Takes a two functions as parameters. And returns a set of entries from the complete databases that return true for both functions.
+    
+    :search_fn: A callable that takes one parameter and returns true or false. 
+                The paramter passed to this callable will be the content of an entry.
+    :vanue_filter: A callable that takes three paramters: (short_name, title, doi) and return a boolean.
+    :return: Returns a list of entries.
+    """
+    info, info_file = _get_collection_info()
+
+    if venue_filter is None:
+        venue_filter = lambda short_name, title, doi:True
+
+    entries = []
+    
+    for doi_file, entry in info.items():
+        if file_filter(entry["short_name"], entry["title"], entry["doi"]):
+            with open(doi_file) as f:
+                full_content_list = json.load(f)
+            for content_dict in full_content_list:
+                content = ":: ".join(content_dict.values())
+                if search_fn(content):
+                    entries.append(content_dict)
+
+    return entries
+                

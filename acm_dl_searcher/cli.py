@@ -5,7 +5,9 @@ import click
 from tabulate import tabulate
 from acm_dl_searcher.__main__ import (_process_venue_data_from_doi,
                                       _get_collection_info,
-                                      _get_entry_count)
+                                      _get_entry_count,
+                                      _search)
+from acm_dl_searcher.search_operations import (GenericSearchFunction, GenericVenueFilter)
 
 @click.group()
 def cli():
@@ -31,6 +33,14 @@ def list(full_path):
     table = [[i["short_name"], i["title"], i["doi"], _get_entry_count(info_file.parent / name), info_file.parent / name if full_path else name] for name, i in info.items()]
     headers = ["Short Name", "Title", "DOI", "# of entries" ,"File"]
     print(tabulate(table, headers, tablefmt="fancy_grid"))
+
+
+@cli.command()
+@click.argument("pattern", type=str)
+@click.option("--venue-short-name-filter", type=str, default=None)
+def search(pattern, venu_short_name_filter):
+    """Search the database for matches"""
+    results = _search(GenericSearchFunction(pattern), GenericVenueFilter(venu_short_name_filter, None, None))
 
 
 if __name__ == "__main__":
