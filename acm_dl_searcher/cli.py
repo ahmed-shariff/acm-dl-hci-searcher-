@@ -38,9 +38,10 @@ def list(full_path):
 @cli.command()
 @click.argument("pattern", type=str)
 @click.option("--venue-short-name-filter", type=str, default=None)
-def search(pattern, venu_short_name_filter):
+def search(pattern, venue_short_name_filter):
     """Search the database for matches"""
-    results = _search(GenericSearchFunction(pattern), GenericVenueFilter(venu_short_name_filter, None, None))
+    results = _search(GenericSearchFunction(pattern), GenericVenueFilter(venue_short_name_filter, None, None))
+    print([result["title"] for result in results], sep="\n")
 
 
 if __name__ == "__main__":

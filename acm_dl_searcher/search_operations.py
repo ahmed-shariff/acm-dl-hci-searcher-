@@ -3,11 +3,12 @@ from fuzzysearch import find_near_matches
 
 class GenericSearchFunction:
     """A generic search function which returns if there is a fuzzy search match"""
-    def __init__(self, pattern):
+    def __init__(self, pattern, max_l_dist=2):
         self.pattern = pattern
+        self.max_l_dist = max_l_dist
 
     def __call__(self, content):
-        return _generic_fuzzy_filter(content, self.pattern)
+        return _generic_fuzzy_filter(content, self.pattern, self.max_l_dist)
 
 
 class GenericVenueFilter:
@@ -22,7 +23,7 @@ class GenericVenueFilter:
         else:
             self._all_none = False
             
-    def  __call__(short_name, title, doi):
+    def  __call__(self, short_name, title, doi):
         if self._all_none:
             return True
         elif self.short_name_filter is not None and _generic_fuzzy_filter(short_name, self.short_name_filter):
@@ -34,6 +35,6 @@ class GenericVenueFilter:
         return False
 
 
-def _generic_fuzzy_filter(string, pattern):
-    return len (find_near_matches(pattern, string, max_l_dist=2)) > 0
+def _generic_fuzzy_filter(string, pattern, max_l_dist=2):
+    return len (find_near_matches(pattern, string, max_l_dist=max_l_dist)) > 0
     

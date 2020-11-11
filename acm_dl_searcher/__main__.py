@@ -174,10 +174,10 @@ def _search(search_fn, venue_filter=None):
         venue_filter = lambda short_name, title, doi:True
 
     entries = []
-    
+    root_dir = _ensure_data_directory_exists()
     for doi_file, entry in info.items():
         if venue_filter(entry["short_name"], entry["title"], entry["doi"]):
-            with open(doi_file) as f:
+            with open(root_dir / doi_file) as f:
                 full_content_list = json.load(f)
             for content_dict in full_content_list:
                 content = ":: ".join(content_dict.values())
