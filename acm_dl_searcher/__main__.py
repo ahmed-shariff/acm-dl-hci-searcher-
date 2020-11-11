@@ -125,7 +125,7 @@ def _search(search_fn, venue_filter=None):
     entries = []
     
     for doi_file, entry in info.items():
-        if file_filter(entry["short_name"], entry["title"], entry["doi"]):
+        if venue_filter(entry["short_name"], entry["title"], entry["doi"]):
             with open(doi_file) as f:
                 full_content_list = json.load(f)
             for content_dict in full_content_list:
