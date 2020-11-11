@@ -7,6 +7,7 @@ from pathlib import Path
 import json
 from tqdm import tqdm
 import multiprocessing as mp
+from tqdm.contrib.concurrent import process_map
 
 
 DATA_DIRECTORY = Path.home() / ".acm_dl_data"
@@ -29,7 +30,10 @@ def _process_venue_data_from_doi(doi, short_name=None, overwrite=False, verify=F
     if doi_file.exists():
         if not overwrite:
             with open(doi_file) as f:
-                doi_list_details = json.load(f)
+                try:
+                    doi_list_details = json.load(f)
+                except json.decoder.JSONDecodeError:
+                    pass
             if not verify:
                 return doi_list_details
             print("File exists. Verifying if all entries exist.")
@@ -45,26 +49,32 @@ def _process_venue_data_from_doi(doi, short_name=None, overwrite=False, verify=F
     doi_list = [i.rstrip("<").lstrip(">") for i in doi_matcher.findall(response.text)]
     total_hits = int(BeautifulSoup(response.text, features="html.parser").find("span", {"class": "hitsLength"}).get_text())
     print(f"Found {total_hits} hits")
+
+    max_workers = 2 * mp.cpu_count() + 2
+    
     if total_hits > 50:
         page_id = 1
+        search_strings = []
         while page_id * 50 < total_hits:
-            print(f"Getting page {page_id}", end="\r")
-            search_string = SEARCH_STRING.format(key=doi, page_id=page_id)
-            response = requests.get(search_string)
-            doi_list.extend([i.rstrip("<").lstrip(">") for i in doi_matcher.findall(response.text)])
+            search_strings.append(SEARCH_STRING.format(key=doi, page_id=page_id))
             page_id += 1
-        print()
 
+        print(f"Getting the urls for the {total_hits} entries")
+        for urls in process_map(_get_doi_urls(doi_matcher), search_strings, max_workers=max_workers):
+            doi_list.extend(urls)
+        print()
+        
     received_doi = [details["doi"] for details in doi_list_details]
 
     # Asynchronusly collect entries
     manager = mp.Manager()
     q = manager.Queue()    
-    pool = mp.Pool(mp.cpu_count() + 2)
+    pool = mp.Pool(max_workers)
 
     #put listener to work first
     watcher = pool.apply_async(_bib_entry_collector, (q, doi_file, doi_list_details))
-    
+
+    print("Getting the entries")
     try:
         jobs = []
         for doi_url in doi_list:
@@ -73,7 +83,7 @@ def _process_venue_data_from_doi(doi, short_name=None, overwrite=False, verify=F
             jobs.append(pool.apply_async(_bib_entry_worker, (doi_url, q)))
 
         # collect results from the workers through the pool result queue
-        for job in tqdm(jobs): 
+        for job in tqdm(jobs):
             job.get()
 
     finally:
@@ -85,6 +95,15 @@ def _process_venue_data_from_doi(doi, short_name=None, overwrite=False, verify=F
         with open(doi_file) as f:
             doi_list_details = json.load(f)
             return doi_list_details
+
+
+class _get_doi_urls:
+    def __init__(self, doi_matcher):
+        self.doi_matcher = doi_matcher
+
+    def __call__(self, search_string):
+        response = requests.get(search_string)
+        return [i.rstrip("<").lstrip(">") for i in self.doi_matcher.findall(response.text)]
 
 
 def _bib_entry_worker(doi_url, q):
@@ -99,6 +118,8 @@ def _bib_entry_worker(doi_url, q):
             details["abstract"] = abstract
             q.put(details)
             break
+        except KeyboardInterrupt:
+            raise
         except Exception as e:
             print(e)
 
@@ -106,13 +127,16 @@ def _bib_entry_worker(doi_url, q):
 def _bib_entry_collector(q, doi_file, doi_list_details):
     '''listens for messages on the q, writes to file. '''
     with open(doi_file, 'w') as f:
+        idx = 0
         while True:
             details = q.get()
-            if details == 'kill':
+            if details == 'kill' or idx % 50 == 0:
                 with open(doi_file, "w") as f:
                     json.dump(doi_list_details, f)
-                break
+                if details == 'kill':
+                    break
             doi_list_details.append(details)
+            idx += 1
 
 
 def _ensure_data_directory_exists():
