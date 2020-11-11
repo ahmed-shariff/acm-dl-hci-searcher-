@@ -6,6 +6,8 @@ import bibtexparser
 from pathlib import Path
 import json
 from tqdm import tqdm
+import multiprocessing as mp
+
 
 DATA_DIRECTORY = Path.home() / ".acm_dl_data"
 SEARCH_STRING = "https://dl.acm.org/action/doSearch?LimitedContentGroupKey={key}&pageSize=50&startPage={page_id}"
@@ -13,7 +15,7 @@ SEARCH_STRING = "https://dl.acm.org/action/doSearch?LimitedContentGroupKey={key}
 
 # TODO: better logging
 # TODO: parallelize data collection
-def _process_venue_data_from_doi(doi, short_name=None, overwrite=False):
+def _process_venue_data_from_doi(doi, short_name=None, overwrite=False, verify=False):
     """
     Takes a doi of a venue in acm and get the entries and abstract. The data will be cacheed in DATA_DIRECTORY. 
     Returns a dictionary containing the doi as keys and the details as values
@@ -22,11 +24,15 @@ def _process_venue_data_from_doi(doi, short_name=None, overwrite=False):
     doi_title = bibtexparser.loads(requests.get(f"http://doi.org/{doi}", headers={"Accept": "application/x-bibtex"}).text).entries[0]["title"]
     print(f"Title: {doi_title}")
     _update_collection_info(doi_file.name, doi, doi_title, short_name)
-    
-    if not overwrite and doi_file.exists():
-        with open(doi_file) as f:
-            doi_list_details = json.load(f)
-        return doi_list_details
+
+    doi_list_details = []
+    if doi_file.exists():
+        if not overwrite:
+            with open(doi_file) as f:
+                doi_list_details = json.load(f)
+            if not verify:
+                return doi_list_details
+            print("File exists. Verifying if all entries exist.")
     
     doi = doi.replace("/", "%2F")
     search_string = SEARCH_STRING.format(key=doi, page_id=0)
@@ -49,19 +55,64 @@ def _process_venue_data_from_doi(doi, short_name=None, overwrite=False):
             page_id += 1
         print()
 
-    doi_list_details = []
-    for doi_url in tqdm(doi_list):
-        details = bibtexparser.loads(requests.get(doi_url, headers={"Accept": "application/x-bibtex"}).text).entries[0]
-        abstract_html = requests.get("https://dl.acm.org/doi/" + details["doi"]).text
-        soup = BeautifulSoup(abstract_html, features="html.parser")
-        abstract = soup.findAll("div", {"class": "abstractInFull"})[0].find("p").get_text()
-        details["abstract"] = abstract
-        doi_list_details.append(details)
+    received_doi = [details["doi"] for details in doi_list_details]
 
-    with open(doi_file, "w") as f:
-        json.dump(doi_list_details, f)
+    # Asynchronusly collect entries
+    manager = mp.Manager()
+    q = manager.Queue()    
+    pool = mp.Pool(mp.cpu_count() + 2)
 
-    return doi_list_details
+    #put listener to work first
+    watcher = pool.apply_async(_bib_entry_collector, (q, doi_file, doi_list_details))
+    
+    try:
+        jobs = []
+        for doi_url in doi_list:
+            if doi_url.lstrip("https://doi.org/") in received_doi:
+                continue
+            jobs.append(pool.apply_async(_bib_entry_worker, (doi_url, q)))
+
+        # collect results from the workers through the pool result queue
+        for job in tqdm(jobs): 
+            job.get()
+
+    finally:
+        #now we are done, kill the listener
+        q.put('kill')
+        pool.close()
+        pool.join()
+
+        with open(doi_file) as f:
+            doi_list_details = json.load(f)
+            return doi_list_details
+
+
+def _bib_entry_worker(doi_url, q):
+    '''Get the doi entry and abstract of from a doi_url'''
+    # Try five times before giving up
+    for _ in range(5):
+        try:
+            details = bibtexparser.loads(requests.get(doi_url, headers={"Accept": "application/x-bibtex"}).text).entries[0]
+            abstract_html = requests.get("https://dl.acm.org/doi/" + details["doi"]).text
+            soup = BeautifulSoup(abstract_html, features="html.parser")
+            abstract = soup.findAll("div", {"class": "abstractInFull"})[0].find("p").get_text()
+            details["abstract"] = abstract
+            q.put(details)
+            break
+        except Exception as e:
+            print(e)
+
+
+def _bib_entry_collector(q, doi_file, doi_list_details):
+    '''listens for messages on the q, writes to file. '''
+    with open(doi_file, 'w') as f:
+        while True:
+            details = q.get()
+            if details == 'kill':
+                with open(doi_file, "w") as f:
+                    json.dump(doi_list_details, f)
+                break
+            doi_list_details.append(details)
 
 
 def _ensure_data_directory_exists():
