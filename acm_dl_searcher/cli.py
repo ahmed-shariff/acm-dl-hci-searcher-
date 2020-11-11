@@ -19,7 +19,7 @@ def get():
     """Get the information for an entry"""
     doi = "10.1145/3313831"
     # TODO: Setting True for testing
-    _process_venue_data_from_doi(doi, "CHI 20")
+    _process_venue_data_from_doi(doi, "CHI 20", verify=True)
 
 
 @cli.command()
