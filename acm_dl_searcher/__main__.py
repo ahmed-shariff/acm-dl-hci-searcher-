@@ -213,10 +213,15 @@ def _search(search_fn, venue_filter=None):
 
     entries = []
     root_dir = _ensure_data_directory_exists()
+    print(f"Searching in `{root_dir}`")
     for doi_file, entry in info.items():
         if venue_filter(entry["short_name"], entry["title"], entry["doi"]):
             with open(root_dir / doi_file) as f:
-                full_content_list = json.load(f)
+                try:
+                    full_content_list = json.load(f)
+                except json.decoder.JSONDecodeError:
+                    print(f"Warning: {entry['doi']} is empty.")
+                    continue
             for content_dict in full_content_list:
                 content = ":: ".join(content_dict.values())
                 if search_fn(content):

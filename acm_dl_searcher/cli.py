@@ -43,10 +43,22 @@ def list(full_path):
 @cli.command()
 @click.argument("pattern", type=str)
 @click.option("--venue-short-name-filter", type=str, default=None)
-def search(pattern, venue_short_name_filter):
+@click.option("--print-abstract", type=bool, is_flag=True, default=False)
+def search(pattern, venue_short_name_filter, print_abstract):
     """Search the database for matches"""
     results = _search(GenericSearchFunction(pattern), GenericVenueFilter(venue_short_name_filter, None, None))
-    print([result["title"] for result in results], sep="\n")
+    formatted_results = [[result["doi"], result["year"], textwrap.fill(result["title"], 70), result["url"]] for result in results]
+    if print_abstract:
+        abstracts = [result["abstract"] for result in results]
+        _formatted_results = []
+        for i in range(len(formatted_results)):
+            _formatted_results.append(formatted_results[i])
+            _formatted_results.append(["", "", textwrap.fill(abstracts[i], 70), ""])
+        formatted_results = _formatted_results
+        header = ["DOI", "Year", "Title/Abstract", "URL"]
+    else:
+        header = ["DOI", "Year", "Title", "URL"]
+    print(tabulate(formatted_results, header,tablefmt="fancy_grid"))
 
 
 if __name__ == "__main__":
