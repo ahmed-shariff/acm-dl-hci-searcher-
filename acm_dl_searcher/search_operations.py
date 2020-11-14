@@ -26,11 +26,11 @@ class GenericVenueFilter:
     def  __call__(self, short_name, title, doi):
         if self._all_none:
             return True
-        elif self.short_name_filter is not None and _generic_fuzzy_filter(short_name, self.short_name_filter):
+        elif self.short_name_filter is not None and _generic_fuzzy_filter(short_name, self.short_name_filter, 0):
             return True
-        elif self.title_filter is not None and _generic_fuzzy_filter(title, self.title_filter):
+        elif self.title_filter is not None and _generic_fuzzy_filter(title, self.title_filter, 0):
             return True
-        elif self.doi_filter is not None and _generic_fuzzy_filter(doi, self.doi_filter):
+        elif self.doi_filter is not None and _generic_fuzzy_filter(doi, self.doi_filter, 0):
             return True
         return False
 
