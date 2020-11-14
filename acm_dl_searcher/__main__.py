@@ -16,15 +16,17 @@ SEARCH_STRING = "https://dl.acm.org/action/doSearch?LimitedContentGroupKey={key}
 
 # TODO: better logging
 # TODO: parallelize data collection
-def _process_venue_data_from_doi(doi, short_name=None, overwrite=False, verify=False):
+def _process_venue_data_from_doi(doi, short_name, overwrite=False, verify=False, force=False):
     """
     Takes a doi of a venue in acm and get the entries and abstract. The data will be cacheed in DATA_DIRECTORY. 
     Returns a dictionary containing the doi as keys and the details as values
     """    
     doi_file = _ensure_data_directory_exists() / (doi.replace("/", "_") + ".json")
-    doi_title = bibtexparser.loads(requests.get(f"http://doi.org/{doi}", headers={"Accept": "application/x-bibtex"}).text).entries[0]["title"]
+    doi_entry = requests.get(f"http://doi.org/{doi}", headers={"Accept": "application/x-bibtex"}).text
+    doi_title = bibtexparser.loads(doi_entry).entries[0]["title"]
     print(f"Title: {doi_title}")
-    _update_collection_info(doi_file.name, doi, doi_title, short_name)
+    
+    _update_collection_info(doi_file.name, doi, doi_title, short_name, force)
 
     doi_list_details = []
     if doi_file.exists():
@@ -159,12 +161,24 @@ def _get_collection_info():
     return info, info_file
         
 
-def _update_collection_info(file_name, doi, title, short_name):
+def _update_collection_info(file_name, doi, title, short_name, force):
     """
     Adds an entry to the gloabl infomation file. If the entry exists, will be overwritten.
     """
     info, info_file = _get_collection_info()
 
+    if file_name in info:
+        if not force and short_name != info[file_name]["short_name"]:
+            raise ValueError("Error: short-name provided does not match the one in database. " \
+                             "If making sure all entries exist, run without the --short-name option to use the name in databse.\n"\
+                             "To force the new name, use the option --force: acm-dl-searcher get <doi> --short-name <new-short-name> --force")
+    else:
+        if short_name is None:
+            raise ValueError("Error: New entry: need paramter value for `short-name`. Pass value with option --short-name.")
+
+    if short_name is not None and len(short_name) > 10:
+        raise ValueError("Error: value for `--short-name` is too long (max 10 charachters).")
+        
     info[file_name] = {"doi": doi, "title": title, "short_name": short_name}
 
     with open(info_file, "w") as f:

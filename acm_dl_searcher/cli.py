@@ -3,6 +3,7 @@ import sys
 
 import click
 from tabulate import tabulate
+import textwrap
 from acm_dl_searcher.__main__ import (_process_venue_data_from_doi,
                                       _get_collection_info,
                                       _get_entry_count,
@@ -15,11 +16,15 @@ def cli():
     pass
 
 @cli.command()
-def get():
-    """Get the information for an entry"""
-    doi = "10.1145/3313831"
-    # TODO: Setting True for testing
-    _process_venue_data_from_doi(doi, "CHI 20", verify=True)
+@click.argument("doi")
+@click.option("--short-name", type=str, help="The short name to use for this venue", default=None)
+@click.option("--force", type=bool, help="Force the short name if different short name is being provided.", default=False, is_flag=True)
+def get(doi, short_name=None, force=False):
+    """Get the information for a value. Expects a doi of a venue."""
+    try:
+        _process_venue_data_from_doi(doi, short_name, verify=True, force=force)
+    except ValueError as e:
+        print(e)
 
 
 @cli.command()
@@ -30,7 +35,7 @@ def list(full_path):
     if full_path:
         print("The file location is: {} \n".format(info_file.parent))
         
-    table = [[i["short_name"], i["title"], i["doi"], _get_entry_count(info_file.parent / name), info_file.parent / name if full_path else name] for name, i in info.items()]
+    table = [[textwrap.fill(i["short_name"], 10), textwrap.fill(i["title"], 60), i["doi"], _get_entry_count(info_file.parent / name), info_file.parent / name if full_path else name] for name, i in info.items()]
     headers = ["Short Name", "Title", "DOI", "# of entries" ,"File"]
     print(tabulate(table, headers, tablefmt="fancy_grid"))
 
