@@ -43,8 +43,10 @@ def _process_venue_data_from_doi(doi, short_name, overwrite=False, verify=False,
     doi = doi.replace("/", "%2F")
     search_string = SEARCH_STRING.format(key=doi, page_id=0)
     response = requests.get(search_string)
-    with open("temp.html", "w") as f:
-        f.write(response.text)
+
+    # For debugging
+    # with open("temp.html", "w") as f:
+    #     f.write(response.text)
 
     doi_matcher = re.compile(r">https:\/\/doi\.org\/\d{2}\.\d{4}\/\d+\.\d+<")
     # A working curl for doi meta data: curl --location --silent --header "Accept: application/x-bibtex" https://doi.org/10.1145/3313831.3376868
