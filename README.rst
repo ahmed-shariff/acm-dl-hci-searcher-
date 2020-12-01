@@ -60,6 +60,12 @@ If getting the entries from the `CHI 16`_ Conference:
             
      acm-dl-searcher search "adaptive" --print-abstracts
 
+  To view the results on the browser use the option ``--html``:
+  
+  .. code:: sh
+            
+     acm-dl-searcher search "adaptive" --html
+
   
 
 

@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "acm_dl_searcher"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 homepage = "https://github.com/ahmed-shariff/acm_dl_searcher"
 description = "Top-level package for ACM DL Searcher."
 authors = ["Ahmed Shariff <shariff.mfa@outlook.com>"]
@@ -23,6 +23,8 @@ packages = [
     { include = "tests", format = "sdist" },
 ]
 
+include = ["acm_dl_searcher/templates/search_result.html"]
+
 [tool.poetry.dependencies]
 python = "^3.6"
 
@@ -34,6 +36,7 @@ bibtexparser = "^1.2.0"
 tqdm = "^4.51.0"
 tabulate = "^0.8.7"
 fuzzysearch = "^0.7.3"
+liquidpy = "^0.6.2"
 
 
 [tool.poetry.dev-dependencies]

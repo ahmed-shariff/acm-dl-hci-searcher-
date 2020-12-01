@@ -9,6 +9,8 @@ from acm_dl_searcher.__main__ import (_process_venue_data_from_doi,
                                       _get_entry_count,
                                       _search)
 from acm_dl_searcher.search_operations import (GenericSearchFunction, GenericVenueFilter)
+from acm_dl_searcher._utils import _display_results_html
+
 
 @click.group()
 def cli():
@@ -44,7 +46,8 @@ def list(full_path):
 @click.argument("pattern", type=str)
 @click.option("--venue-short-name-filter", type=str, default=None)
 @click.option("--print-abstract", type=bool, is_flag=True, default=False)
-def search(pattern, venue_short_name_filter, print_abstract):
+@click.option("--html", type=bool, is_flag=True, default=False, help="Show results on browser")
+def search(pattern, venue_short_name_filter, print_abstract, html):
     """Search the database for matches"""
     results = _search(GenericSearchFunction(pattern, 0), GenericVenueFilter(venue_short_name_filter, None, None))
     formatted_results = [[result["doi"], result["year"], textwrap.fill(result["title"], 70), result["url"]] for result in results]
@@ -59,6 +62,8 @@ def search(pattern, venue_short_name_filter, print_abstract):
     else:
         header = ["DOI", "Year", "Title", "URL"]
     print(tabulate(formatted_results, header,tablefmt="fancy_grid"))
+    if html:
+        _display_results_html(pattern, results)
 
 
 if __name__ == "__main__":

@@ -8,11 +8,7 @@ import json
 from tqdm import tqdm
 import multiprocessing as mp
 from tqdm.contrib.concurrent import process_map
-
-
-DATA_DIRECTORY = Path.home() / ".acm_dl_data"
-SEARCH_STRING = "https://dl.acm.org/action/doSearch?LimitedContentGroupKey={key}&pageSize=50&startPage={page_id}"
-
+from acm_dl_searcher._utils import _ensure_data_directory_exists, SEARCH_STRING
 
 # TODO: better logging
 # TODO: parallelize data collection
@@ -141,13 +137,6 @@ def _bib_entry_collector(q, doi_file, doi_list_details):
                     break
             doi_list_details.append(details)
             idx += 1
-
-
-def _ensure_data_directory_exists():
-    """Makes sure the data directory exists and returns the data directory path"""
-    if not DATA_DIRECTORY.exists():
-        DATA_DIRECTORY.mkdir()
-    return DATA_DIRECTORY
     
 
 def _get_collection_info():
