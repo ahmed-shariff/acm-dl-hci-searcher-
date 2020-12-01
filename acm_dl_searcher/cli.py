@@ -46,7 +46,7 @@ def list(full_path):
 @click.option("--print-abstract", type=bool, is_flag=True, default=False)
 def search(pattern, venue_short_name_filter, print_abstract):
     """Search the database for matches"""
-    results = _search(GenericSearchFunction(pattern), GenericVenueFilter(venue_short_name_filter, None, None))
+    results = _search(GenericSearchFunction(pattern, 0), GenericVenueFilter(venue_short_name_filter, None, None))
     formatted_results = [[result["doi"], result["year"], textwrap.fill(result["title"], 70), result["url"]] for result in results]
     if print_abstract:
         abstracts = [result["abstract"] for result in results]

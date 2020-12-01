@@ -136,7 +136,7 @@ def _bib_entry_collector(q, doi_file, doi_list_details):
             details = q.get()
             if details == 'kill' or idx % 50 == 0:
                 with open(doi_file, "w") as f:
-                    json.dump(doi_list_details, f)
+                    json.dump(doi_list_details, f, indent=4)
                 if details == 'kill':
                     break
             doi_list_details.append(details)
@@ -184,7 +184,7 @@ def _update_collection_info(file_name, doi, title, short_name, force):
     info[file_name] = {"doi": doi, "title": title, "short_name": short_name}
 
     with open(info_file, "w") as f:
-        json.dump(info, f)
+        json.dump(info, f, indent=4)
 
 
 def _get_entry_count(doi_file):
