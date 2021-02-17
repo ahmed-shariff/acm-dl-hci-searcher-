@@ -194,7 +194,7 @@ def _search(search_fn, venue_filter=None):
     
     :search_fn: A callable that takes one parameter and returns true or false. 
                 The paramter passed to this callable will be the content of an entry.
-    :vanue_filter: A callable that takes three paramters: (short_name, title, doi) and return a boolean.
+    :venue_filter: A callable that takes three paramters: (short_name, title, doi) and return a boolean.
     :return: Returns a list of entries.
     """
     info, info_file = _get_collection_info()
