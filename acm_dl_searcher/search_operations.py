@@ -1,4 +1,5 @@
 from fuzzysearch import find_near_matches
+import re
 
 
 class GenericSearchFunction:
@@ -39,3 +40,14 @@ class GenericVenueFilter:
 def _generic_fuzzy_filter(string, pattern, max_l_dist=2):
     return len (find_near_matches(pattern, string, max_l_dist=max_l_dist)) > 0
     
+
+
+class RegexFilter:
+    def __init__(self, pattern):
+        self.pattern = re.compile(pattern, flags=re.I)
+
+    def __call__(self, content):
+        match = self.pattern.search(content)
+        if match:
+            return True
+        return False

@@ -8,7 +8,7 @@ from acm_dl_searcher.__main__ import (_process_venue_data_from_doi,
                                       _get_collection_info,
                                       _get_entry_count,
                                       _search)
-from acm_dl_searcher.search_operations import (GenericSearchFunction, GenericVenueFilter)
+from acm_dl_searcher.search_operations import (GenericSearchFunction, GenericVenueFilter, RegexFilter)
 from acm_dl_searcher._utils import _display_results_html
 
 
@@ -47,11 +47,19 @@ def list(full_path):
 @click.option("--venue-short-name-filter", type=str, default=None)
 @click.option("--print-abstract", type=bool, is_flag=True, default=False)
 @click.option("--html", type=bool, is_flag=True, default=False, help="Show results on browser")
+@click.option("--re", type=bool, is_flag=True, default=False, help="Use regex matcher for pattern matching")
 @click.option("--fuzzy-max-l-pattern", type=int, default=0, help="The maximum number of differences allowed from the pattern to add to the result")
 @click.option("--fuzzy-max-l-venue", type=int, default=0, help="The maximum number of differences allowed from the venue-short-name-filter to add to the result")
-def search(pattern, venue_short_name_filter, print_abstract, html, fuzzy_max_l_pattern, fuzzy_max_l_venue):
+def search(pattern, venue_short_name_filter, print_abstract, html, re, fuzzy_max_l_pattern, fuzzy_max_l_venue):
     """Search the database for matches"""
-    results = _search(GenericSearchFunction(pattern, fuzzy_max_l_pattern), GenericVenueFilter(venue_short_name_filter, None, None, fuzzy_max_l_venue))
+    if re:
+        search_fn = RegexFilter(pattern)
+        if fuzzy_max_l_pattern > 0:
+            print("Ignoring `fuzzy-max-l-pattern`")
+    else:
+        search_fn = GenericSearchFunction(pattern, fuzzy_max_l_pattern)
+    results = _search(search_fn, GenericVenueFilter(venue_short_name_filter, None, None, fuzzy_max_l_venue))
+    
     formatted_results = [[result["doi"], result["year"], textwrap.fill(result["title"], 70), result["url"]] for result in results]
     if print_abstract:
         abstracts = [result["abstract"] for result in results]
