@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "acm_dl_searcher"
-version = "0.1.0-alpha.2"
+version = "0.1.0-alpha.3"
 homepage = "https://github.com/ahmed-shariff/acm_dl_searcher"
 description = "Top-level package for ACM DL Searcher."
 authors = ["Ahmed Shariff <shariff.mfa@outlook.com>"]

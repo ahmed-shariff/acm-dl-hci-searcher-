@@ -5,7 +5,7 @@ from acm_dl_searcher import search_operations
 
 __author__ = """Ahmed Shariff"""
 __email__ = 'shariff.mfa@outlook.com'
-__version__ = '0.1.0-alpha.2'
+__version__ = '0.1.0-alpha.3'
 
 search = _search
 
