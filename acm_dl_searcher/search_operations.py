@@ -13,10 +13,11 @@ class GenericSearchFunction:
 
 class GenericVenueFilter:
     """ If any of short_name, title or doi matches a given input, the callable will return true"""
-    def __init__(self, short_name_filter, title_filter, doi_filter):
+    def __init__(self, short_name_filter, title_filter, doi_filter, max_l_dist=0):
         self.short_name_filter = short_name_filter
         self.title_filter = title_filter
         self.doi_filter = doi_filter
+        self.max_l_dist = max_l_dist
         
         if short_name_filter is None and title_filter is None and doi_filter is None:
             self._all_none = True
@@ -26,11 +27,11 @@ class GenericVenueFilter:
     def  __call__(self, short_name, title, doi):
         if self._all_none:
             return True
-        elif self.short_name_filter is not None and _generic_fuzzy_filter(short_name, self.short_name_filter, 0):
+        elif self.short_name_filter is not None and _generic_fuzzy_filter(short_name, self.short_name_filter, self.max_l_dist):
             return True
-        elif self.title_filter is not None and _generic_fuzzy_filter(title, self.title_filter, 0):
+        elif self.title_filter is not None and _generic_fuzzy_filter(title, self.title_filter, self.max_l_dist):
             return True
-        elif self.doi_filter is not None and _generic_fuzzy_filter(doi, self.doi_filter, 0):
+        elif self.doi_filter is not None and _generic_fuzzy_filter(doi, self.doi_filter, self.max_l_dist):
             return True
         return False
 

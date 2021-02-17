@@ -47,9 +47,11 @@ def list(full_path):
 @click.option("--venue-short-name-filter", type=str, default=None)
 @click.option("--print-abstract", type=bool, is_flag=True, default=False)
 @click.option("--html", type=bool, is_flag=True, default=False, help="Show results on browser")
-def search(pattern, venue_short_name_filter, print_abstract, html):
+@click.option("--fuzzy-max-l-pattern", type=int, default=0, help="The maximum number of differences allowed from the pattern to add to the result")
+@click.option("--fuzzy-max-l-venue", type=int, default=0, help="The maximum number of differences allowed from the venue-short-name-filter to add to the result")
+def search(pattern, venue_short_name_filter, print_abstract, html, fuzzy_max_l_pattern, fuzzy_max_l_venue):
     """Search the database for matches"""
-    results = _search(GenericSearchFunction(pattern, 0), GenericVenueFilter(venue_short_name_filter, None, None))
+    results = _search(GenericSearchFunction(pattern, fuzzy_max_l_pattern), GenericVenueFilter(venue_short_name_filter, None, None, fuzzy_max_l_venue))
     formatted_results = [[result["doi"], result["year"], textwrap.fill(result["title"], 70), result["url"]] for result in results]
     if print_abstract:
         abstracts = [result["abstract"] for result in results]
