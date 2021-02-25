@@ -12,6 +12,13 @@ from acm_dl_searcher.search_operations import (GenericSearchFunction, GenericVen
 from acm_dl_searcher._utils import _display_results_html
 
 
+def _get(doi, short_name, force):
+    try:
+        _process_venue_data_from_doi(doi, short_name, verify=True, force=force)
+    except ValueError as e:
+        print(e)
+
+        
 @click.group()
 def cli():
     """Console script for acm_dl_hci_searcher."""
@@ -23,10 +30,7 @@ def cli():
 @click.option("--force", type=bool, help="Force the short name if different short name is being provided.", default=False, is_flag=True)
 def get(doi, short_name=None, force=False):
     """Get the information for a value. Expects a doi of a venue."""
-    try:
-        _process_venue_data_from_doi(doi, short_name, verify=True, force=force)
-    except ValueError as e:
-        print(e)
+    _get(doi, short_name, force)
 
 
 @cli.command()
@@ -76,5 +80,20 @@ def search(pattern, venue_short_name_filter, print_abstract, html, re, fuzzy_max
         _display_results_html(pattern, results)
 
 
+@cli.command()
+@click.argument("short-name-and-doi", nargs=-1, required=True)
+@click.option("--force", type=bool, help="Force the short name if different short name is being provided.", default=False, is_flag=True)
+def multiget(short_name_and_doi, force=False):
+    """Like the get command; but takes a list of short-names and dois and download them sequentially. 
+    This is a convinience method for calling GET mulitple times. Example call: acm-dl-searcher multiget \"CHI 20\" 10.1145/3313831 \"CHI 19\" 10.1145/3290605"""
+    if len(short_name_and_doi) % 2 != 0:
+        print("Expecting even number of arguments, received odd number of arguments")
+        return
+
+    for i in range(0, len(short_name_and_doi), 2):
+        print(f"processing short-name: {short_name_and_doi[i]}  doi: {short_name_and_doi[i+1]}")
+        _get(short_name_and_doi[i+1], short_name_and_doi[i], force)
+
+        
 if __name__ == "__main__":
     sys.exit(main())  # pragma: no cover
