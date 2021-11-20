@@ -12,6 +12,7 @@ ACM DL Searcher
 
 A simple command line tool to collect the entries on a particular venue and in acm and run searches on them.
 
+WARNING: The current implementation is prone to blocking you IP since it doesn't exactly abide by the policies of acm. Use at your own risk.
 
 Install
 -------
